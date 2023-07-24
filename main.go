@@ -12,6 +12,7 @@ import (
 
 	"clean_architecture/api/routes"
 	"clean_architecture/config"
+	"clean_architecture/pkg/auth"
 	"clean_architecture/pkg/user"
 )
 
@@ -22,8 +23,12 @@ func main() {
 	userRepo := user.NewRepo(database)
 	userService := user.NewService(userRepo)
 
+	authRepo := auth.NewRepo(database)
+	authService := auth.NewService(authRepo)
+
 	api := app.Group("/api", logger.New())
 	routes.UserRoutes(api, userService)
+	routes.AuthRoutes(api, authService)
 
 	app.Listen(":3000")
 }
