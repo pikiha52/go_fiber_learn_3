@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"clean_architecture/api/presenter"
@@ -39,10 +40,17 @@ func (r *repository) QueryAll() (*[]presenter.User, error) {
 func (r *repository) CreateOne(user *entities.User) (*entities.User, error) {
 	user.ID = uuid.New()
 
-	err := r.Database.Create(&user).Error
-
+	hash, err := HashPassword(user.Password)
 	if err != nil {
 		return nil, err
+	}
+
+	user.Password = hash
+
+	errSave := r.Database.Create(&user).Error
+
+	if errSave != nil {
+		return nil, errSave
 	}
 
 	return user, nil
@@ -90,4 +98,9 @@ func (r *repository) DeleteOne(id string) error {
 	}
 
 	return nil
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
